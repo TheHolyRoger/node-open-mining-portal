@@ -1,0 +1,9 @@
+{
+    "name": "TheHolyRogerCoin",
+    "symbol": "ROGER",
+    "algorithm": "scrypt",
+    "nValue": 1024, //optional - defaults to 1024
+    "rValue": 1, //optional - defaults to 1
+    "txMessages": false, //optional - defaults to false,
+    "peerMagic": "fcc2c4eb"
+}
