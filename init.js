@@ -272,6 +272,10 @@ var startCliListener = function(){
             case 'coinswitch':
                 processCoinSwitchCommand(params, options, reply);
                 break;
+            case 'reloadwebsite':
+                stopWebsite();
+                reply('Reloaded website');
+                break;
             case 'reloadpool':
                 Object.keys(cluster.workers).forEach(function(id) {
                     cluster.workers[id].send({type: 'reloadpool', coin: params[0] });
@@ -385,6 +389,7 @@ var startPaymentProcessor = function(){
     });
 };
 
+var websiteWorker = false;
 
 var startWebsite = function(){
 
@@ -395,13 +400,18 @@ var startWebsite = function(){
         pools: JSON.stringify(poolConfigs),
         portalConfig: JSON.stringify(portalConfig)
     });
-    worker.on('exit', function(code, signal){
+    websiteWorker = worker;
+    websiteWorker.on('exit', function(code, signal){
         logger.error('Master', 'Website', 'Website process died, spawning replacement...');
         setTimeout(function(){
             startWebsite(portalConfig, poolConfigs);
         }, 2000);
     });
 };
+
+var stopWebsite = function(){
+    if (websiteWorker){websiteWorker.process.kill()};
+}
 
 
 var startProfitSwitch = function(){
