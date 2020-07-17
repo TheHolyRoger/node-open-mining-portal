@@ -58,6 +58,24 @@ module.exports = function(logger, portalConfig, poolConfigs){
         });
     }
 
+    this.getBlocksStats = function (cback) {
+        var client = redisClients[0].client;
+        client.hgetall("Allblocks", function (error, data) {
+            if (error) {
+                logger.log("error:-" + error);
+                cback("");
+                return;
+            }
+            var ordered_data = {}
+            Object.keys(data).sort().reverse().forEach(function(key) {
+              ordered_data[key] = data[key];
+            });
+
+            cback(ordered_data);
+
+        });
+    };
+
     function gatherStatHistory(){
 
         var retentionTime = (((Date.now() / 1000) - portalConfig.website.stats.historicalRetention) | 0).toString();

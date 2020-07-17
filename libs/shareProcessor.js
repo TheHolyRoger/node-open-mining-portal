@@ -19,6 +19,7 @@ module.exports = function(logger, poolConfig){
 
     var redisConfig = poolConfig.redis;
     var coin = poolConfig.coin.name;
+    // var coinSymbol = poolConfig.coin.symbol;
 
 
     var forkId = process.env.forkId;
@@ -90,6 +91,7 @@ module.exports = function(logger, poolConfig){
             redisCommands.push(['sadd', coin + ':blocksPending', [shareData.blockHash, shareData.txHash, shareData.height].join(':')]);
             redisCommands.push(['hincrby', coin + ':stats', 'validBlocks', 1]);
             redisCommands.push(['hset', coin + ':stats', 'lastblock', shareData.height]);
+            redisCommands.push(['hset', 'Allblocks', coin + "-" + shareData.height, [shareData.blockHash, shareData.txHash, shareData.height, shareData.worker, shareData.time, shareData.blockReward].join(':')]); //used for block stat
         }
         else if (shareData.blockHash){
             redisCommands.push(['hincrby', coin + ':stats', 'invalidBlocks', 1]);
