@@ -73,6 +73,7 @@ module.exports = function(logger, poolConfig){
         if (isValidShare){
             redisCommands.push(['hincrbyfloat', coin + ':shares:roundCurrent', shareData.worker, shareData.difficulty]);
             redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);
+            redisCommands.push(['hset', coin + ':stats', 'height', (shareData.height-1 > 0 ? (shareData.height-1 || 0) : 0)]);
         }
         else{
             redisCommands.push(['hincrby', coin + ':stats', 'invalidShares', 1]);
@@ -88,6 +89,7 @@ module.exports = function(logger, poolConfig){
             redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
             redisCommands.push(['sadd', coin + ':blocksPending', [shareData.blockHash, shareData.txHash, shareData.height].join(':')]);
             redisCommands.push(['hincrby', coin + ':stats', 'validBlocks', 1]);
+            redisCommands.push(['hset', coin + ':stats', 'lastblock', shareData.height]);
         }
         else if (shareData.blockHash){
             redisCommands.push(['hincrby', coin + ':stats', 'invalidBlocks', 1]);

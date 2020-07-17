@@ -141,12 +141,17 @@ module.exports = function(logger, portalConfig, poolConfigs){
                             symbol: poolConfigs[coinName].coin.symbol.toUpperCase(),
                             algorithm: poolConfigs[coinName].coin.algorithm,
                             hashrates: replies[i + 1],
+                            height: replies[i + 2] ? (replies[i + 2].height || 0) : 0,
+                            shares: replies[i + 3],
                             poolStats: {
                                 validShares: replies[i + 2] ? (replies[i + 2].validShares || 0) : 0,
                                 validBlocks: replies[i + 2] ? (replies[i + 2].validBlocks || 0) : 0,
                                 invalidShares: replies[i + 2] ? (replies[i + 2].invalidShares || 0) : 0,
-                                totalPaid: replies[i + 2] ? (replies[i + 2].totalPaid || 0) : 0
+                                totalPaid: replies[i + 2] ? (replies[i + 2].totalPaid || 0) : 0,
+                                lastBlock: replies[i + 2] ? (replies[i + 2].lastblock || 0) : 0,
+                                networkBlocks: replies[i + 2] ? (replies[i + 2].height || 0) : 0,
                             },
+                            poolFees: poolConfigs[coinName].rewardRecipients ? poolConfigs[coinName].rewardRecipients : {},
                             blocks: {
                                 pending: replies[i + 3],
                                 confirmed: replies[i + 4],
@@ -178,13 +183,13 @@ module.exports = function(logger, portalConfig, poolConfigs){
             Object.keys(allCoinStats).forEach(function(coin){
                 var coinStats = allCoinStats[coin];
                 coinStats.workers = {};
-                coinStats.shares = 0;
+                coinStats.total_shares = 0;
                 coinStats.hashrates.forEach(function(ins){
                     var parts = ins.split(':');
                     var workerShares = parseFloat(parts[0]);
                     var worker = parts[1];
                     if (workerShares > 0) {
-                        coinStats.shares += workerShares;
+                        coinStats.total_shares += workerShares;
                         if (worker in coinStats.workers)
                             coinStats.workers[worker].shares += workerShares;
                         else
@@ -207,7 +212,7 @@ module.exports = function(logger, portalConfig, poolConfigs){
                 });
 
                 var shareMultiplier = Math.pow(2, 32) / algos[coinStats.algorithm].multiplier;
-                coinStats.hashrate = shareMultiplier * coinStats.shares / portalConfig.website.stats.hashrateWindow;
+                coinStats.hashrate = shareMultiplier * coinStats.total_shares / portalConfig.website.stats.hashrateWindow;
 
                 coinStats.workerCount = Object.keys(coinStats.workers).length;
                 portalStats.global.workers += coinStats.workerCount;
@@ -229,7 +234,7 @@ module.exports = function(logger, portalConfig, poolConfigs){
                 }
 
                 delete coinStats.hashrates;
-                delete coinStats.shares;
+                delete coinStats.total_shares;
                 coinStats.hashrateString = _this.getReadableHashRateString(coinStats.hashrate);
             });
 
