@@ -60,18 +60,40 @@ module.exports = function(logger, portalConfig, poolConfigs){
 
     this.getBlocksStats = function (cback) {
         var client = redisClients[0].client;
+        var redisCommands = [];
         client.hgetall("Allblocks", function (error, data) {
             if (error) {
                 logger.log("error:-" + error);
                 cback("");
                 return;
             }
-            var ordered_data = {}
+            var ordered_data = {};
+            var data_count = 0;
+            var total_blocks = Object.keys(data).length;
             Object.keys(data).sort().reverse().forEach(function(key) {
-              ordered_data[key] = data[key];
+                if (data_count < 30) {
+                    ordered_data[key] = data[key];
+                    if (total_blocks > 120)
+                        redisCommands.push(['hset', 'Allblocks', key, data[key]]); //used for block stat
+                    data_count++;
+                }
             });
-
-            cback(ordered_data);
+            if (total_blocks > 120) {
+                client.del("Allblocks", function (error, deldata) {
+                    client.multi(redisCommands).exec(function(err, replies){
+                        if (err){
+                            logger.error(logSystem, 'Historics', 'Error with block stats ' + JSON.stringify(err));
+                            cback(ordered_data);
+                            return;
+                        }
+                        cback(ordered_data);
+                        return;
+                    });
+                });
+            } else {
+                cback(ordered_data);
+                return;
+            }
 
         });
     };
