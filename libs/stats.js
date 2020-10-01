@@ -62,12 +62,15 @@ module.exports = function(logger, portalConfig, poolConfigs){
         var client = redisClients[0].client;
         var redisCommands = [];
         client.hgetall("Allblocks", function (error, data) {
-            if (error) {
-                logger.log("error:-" + error);
-                cback("");
+            var ordered_data = {};
+            if (error || (typeof(data) != "object")) {
+                if (error) {
+                    logger.log("error:-" + error);
+                }
+                // return empty object if error or no blocks in redis yet.
+                cback(ordered_data);
                 return;
             }
-            var ordered_data = {};
             var data_count = 0;
             var total_blocks = Object.keys(data).length;
             Object.keys(data).sort().reverse().forEach(function(key) {
