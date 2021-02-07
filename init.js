@@ -374,8 +374,12 @@ var startPaymentProcessor = function(){
         }
     }
 
-    if (!enabledForAny)
+    if (!enabledForAny) {
+        logger.warning('Master', 'Payment Processor', 'Payment Processor disabled.');
         return;
+    }
+
+    logger.debug('Master', 'Payment Processor', 'Spawning Payment Processor worker.');
 
     var worker = cluster.fork({
         workerType: 'paymentProcessor',
